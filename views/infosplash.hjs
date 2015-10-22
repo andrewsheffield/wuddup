@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <title>{{ title }}</title>
+
+  <meta name="robots" content="noindex">
+
+  <link rel='stylesheet prefetch' href='http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'>
+
+    <link rel="stylesheet" href="/stylesheets/infosplash.css">
+
+</head>
+
+<body>
+
+  <body>
+
+    <div class="site-wrapper">
+
+      <div class="site-wrapper-inner">
+
+        <div class="cover-container">
+
+          <div class="masthead clearfix">
+            <div class="inner">
+              <h3 class="masthead-brand"><a href="/">&lt; Back to main page</a></h3>
+            </div>
+          </div>
+
+          <div class="inner cover">
+            <h1 class="cover-heading">{{ header }}</h1>
+            <p class="lead">{{ body }}</p>
+          </div>
+
+          <div class="mastfoot">
+            <div class="inner">
+              <p>&copy; Ink-Slinger and Andrew J Sheffield</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+</body>
+
+  <script src='http://codepen.io/assets/libs/fullpage/jquery.js'></script>
+  <script src='http://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.min.js'></script>
+
+</body>
+
+</html>

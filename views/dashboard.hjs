@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <title>Node Framework - Dashboard</title>
+
+  <meta name="robots" content="noindex">
+
+  <link rel='stylesheet prefetch' href='http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css'>
+
+    <link rel="stylesheet" href="/stylesheets/dashboard.css">
+
+</head>
+
+<body>
+
+  <body ng-app="myApp" ng-controller="myCtrl">
+  <div class="container">
+    <div class="row">
+      <div class="navbar navbar-default" role="navigation">
+        <div class="container">
+          <ol class="breadcrumb navbar-brand navbar-title">
+            <li>
+              <a href="/dashboard/"><span class="glyphicon glyphicon-home"></span> Node Framework</a>
+            </li>
+          </ol>
+          <ul class="nav navbar-nav">
+            <li><a href="#" data-toggle="modal" data-target="#create-new-modal">Create New <span class="glyphicon glyphicon-plus"></span></a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <!--li>
+              <a href="#">
+                <span class="glyphicon glyphicon-envelope"></span>
+                Messages 
+                <span class="badge">19</span>
+              </a>
+            </li-->
+            <li class="dropdown user-dropdown">
+              <a class="dropdown-toggle" data-toggle="dropdown" href="#">{{ user.name.first }} {{ user.name.last }} <span class="caret"></span></a>
+              <ul class="dropdown-menu" role="menu">
+                <li><a href="#" data-toggle="modal" data-target="#feedback-modal">Feedback</a></li>
+                <li class="divider"></li>
+                <!--li><a href="#" data-toggle="modal" data-target="#settings-modal">Settings</a></li-->
+                <li><a href="/api-v1.0.0/authenticate/logout">Logout</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!--Search form-->
+    <form role="form">
+      <div class="search-form input-group col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4">
+        <span class="input-group-addon">
+          <span class="glyphicon glyphicon-search"></span>
+        </span>
+        <input type="text" class="form-control" placeholder="Search" ng-model="search" id="searchBar"/>
+      </div>
+    </form><!--End of Search field-->
+
+    <div class="row">
+      <div class="panel panel-default content">
+        <div class="panel-body">
+
+            <div class="col-lg-3 col-sm-3 doc" data-ng-repeat="doc in documents | filter:search | orderBy:'created'">
+
+              <div class="panel-doc panel panel-primary">
+                <span class='delete-doc glyphicon glyphicon-remove-circle' data-ng-click="deleteDoc(doc)"></span>
+                <div class="panel-heading">
+                  <h3 class="panel-title">{[{ doc.title }]}</h3>
+                </div>
+                <div class="panel-body">
+                  <div class="doc-details">{[{ doc.details }]}</div>
+                  <a class='btn btn-primary openbtn btn-block btn-lg' ng-href="/document/{[{ doc._id }]}">Open</a>
+                  <button data-toggle='modal' data-target='#details-modal' class='btn btn-primary openbtn btn-block btn-lg' data-ng-click="detailsModal(doc)">Details</button>
+                </div>
+              </div>
+
+          </div>
+          
+      </div>
+    </div>
+
+    <div class="well well-lg">&copy; Node Framework by Andrew J Sheffield</div>
+
+  </div>
+
+  <!--Feedback Modal-->
+  <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="feedback-modal" role="dialog" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+            <span aria-hidden="true">×</span>
+          </button>
+          <h4 class="modal-title">Provide Feedback</h4>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="form-group">
+              <input class="form-control" id="subject" placeholder="Subject" type="text" data-ng-model="feedback.subject">
+            </div>
+            <div class="form-group">
+              <textarea class="form-control" id="body" placeholder="Please provide clear and concise comments to help us improve Ink-Slinger..." rows="3" data-ng-model="feedback.body"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+          <button class="btn btn-primary" type="button" data-dismiss="modal" data-ng-click="sendFeedback()">Submit Feedback</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--Settings Modal-->
+  <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="settings-modal" role="dialog" tabindex="-1" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+            <span aria-hidden="true">×</span>
+          </button>
+          <h4 class="modal-title">Settings</h4>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="form-group">
+              <label>
+                <input type="checkbox">&nbsp;Receive email notifications
+              </label>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox">&nbsp;Receive emails news and updates
+              </label>
+            </div>
+            <div class="form-group">
+              <label>
+                <input type="checkbox">&nbsp;Automatically join lists
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+          <button class="btn btn-primary" type="button">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--Details Modal-->
+  <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="details-modal" role="dialog" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+            <span aria-hidden="true">×</span>
+          </button>
+          <h4 class="modal-title">View/Edit details about your document</h4>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="form-group">
+              <!--Title input-->
+              <input class="form-control" id="title" placeholder="title" type="text" value="" data-ng-model="docChanges.title"/>
+            </div>
+            <div class="form-group">
+              <!--details input-->
+              <textarea class="form-control" id="details" placeholder="Info about your document..." rows="3" data-ng-model="docChanges.details"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+          <button class="btn btn-primary" type="button" data-dismiss="modal" data-ng-click="saveDocChanges()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--Create New Modal-->
+  <div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="create-new-modal" role="dialog" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+            <span aria-hidden="true">×</span>
+          </button>
+          <h4 class="modal-title">Create new document:</h4>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="form-group">
+              <input class="form-control" id="title" placeholder="Title" type="text" data-ng-model="newDoc.title" />
+            </div>
+            <div class="form-group">
+              <textarea class="form-control" id="body" placeholder="Info about your document..." rows="3" data-ng-model="newDoc.details"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+          <button class="btn btn-primary" type="button" data-dismiss ="modal" data-ng-click="addDoc()">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+  <script src='http://codepen.io/assets/libs/fullpage/jquery.js'></script>
+  <script src='http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js'></script>
+  <script src='http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.15/angular.min.js'></script>
+
+  <script src="/javascripts/dashboard.js"></script>
+
+</body>
+
+</html>
