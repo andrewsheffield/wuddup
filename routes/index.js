@@ -1,46 +1,61 @@
 var express = require('express');
 var router = express.Router();
-var mongoose = require('mongoose');
-var passport = require('passport');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
-var crypto = require('crypto');
-var bcrypt = require('bcrypt');
-
-//Can be called as middleware to protect certain routes
-function ensureAuth(req, res, next) {
-	if (req.isAuthenticated()) {
-		next();
-	} else {
-		res.status(403).send('Error 403: You do not have the correct credentials to access this page.');
-	}
-}
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-	if (req.isAuthenticated()) {
-		if (req.user.verified) {
-			res.redirect('/dashboard');
-		} else {
-			res.render('index', { message: 'You have not yet verified your email.' });
+  res.render('index', { title: 'Express' });
+});
+
+//UPDATE
+router.put('/items/:id', function(req, res, next) {
+
+	var id = {_id: req.params.id};
+	var update = {
+		name: req.body.name,
+		type: req.body.type,
+		quantity: req.body.quantity
+	};
+	var options = {new: true};
+
+	Item.findOneAndUpdate(id, update, options, function(err, data) {
+
+		if (err) {
+			res.json(err);
 		}
-	} else {
-		res.render('index', { message: req.flash('error') });
-	}
+
+		else if (data.length===0) {
+			res.json({message: 'An item with that id does not exist in this database.'})
+		}
+
+		else {
+			res.json(data);
+		}
+
+	});
+
 });
 
-/* GET dashboard if authenticated.  */
-router.get('/dashboard', function(req, res, next) {
-	if (req.isAuthenticated()) {
-		res.render('dashboard', { user: req.user });
-	} else {
-		res.redirect('/');
-	}
-});
+//DELETE
+router.delete('/items/:id', function(req, res, next) {
 
-router.get('/document/:id', ensureAuth, function(req, res, next) {
-	res.render('document');
-});
+	var id = {_id: req.params.id};
 
+	Item.findOneAndRemove(id, function(err, data) {
+
+		if (err) {
+			res.json(err);
+		}
+
+		else if (data.length===0) {
+			res.json({message: 'An item with that id does not exist in this database.'});
+		}
+
+		else {
+			res.json({message: 'Success. Item deleted.'});
+		}
+
+	});
+
+});
 
 module.exports = router;
