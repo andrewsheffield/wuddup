@@ -1,11 +1,520 @@
 <!DOCTYPE html>
-<html>
+<html >
   <head>
-    <title>{{ title }}</title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <meta charset="UTF-8">
+    <title>Social network UI</title>
+    
+    
+    
+    <link rel='stylesheet prefetch' href='http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css'>
+
+        <link rel="stylesheet" href="stylesheets/style.css">
+
+    
+    
+    
   </head>
+
   <body>
-    <h1>{{ title }}</h1>
-    <p>Welcome to {{ title }}</p>
+
+    <!--Controls how the site will be viewed on mobile devices-->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<body ng-app="myApp" ng-controller="myCtrl">
+
+<!--Header content-->
+<div id="header" class="container">
+  
+  
+  
+  <div class="col-md-12">
+    <nav class="navbar navbar-default navbar-fixed-top">
+      
+      <div class="new-data-alert hidden">
+        <a href="#">
+          2 New Posts 
+          <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+        </a>
+      </div>
+      
+      <div class="container">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#main-nav-collapse" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand logo" href="#">
+          <img align="left" class="img img-logo img-responsive" src="images/cool-story-bro-hi.png" /><span>Wuddup?! <small>BETA</small></span>
+        </a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="main-nav-collapse">
+        <ul id="site-nav" class="nav navbar-nav">
+        </ul>
+        <!--Site Nav / navbar left-->
+
+        <ul class="nav navbar-nav navbar-right">
+
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle name-dropdown" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+              Menu 
+              <span id="notification-badge" class="badge">2</span>
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="#">User posted something</a></li>
+              <li><a href="#">User wants to be your friend</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a href="#">Logout</a></li>
+            </ul>
+          </li>
+          <!--User drop down-->
+
+        </ul>
+        <!--user nav / navbar left-->
+
+      </div>
+      <!-- /.navbar-collapse -->
+    </nav>
+  </div>
+</div>
+
+
+<!--Main content area-->
+<div id="main-content" class="container">
+  
+  <!--Friend menu-->
+  <div id="friends-bar" class="col-md-3 col-md-push-9 hidden-sm hidden-xs" ng-cloak>
+    
+    <!--Search bar for friends-->
+    <div class="row">
+      <div class="col-md-12">
+        <input ng-model="friendSearchInput.text" class="form-control" placeholder="Find friends..." ng-change="searchUsers()"/>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-12">
+        
+        <div class="friends-list">
+          
+          <!--Friends list-->
+          <div class="friends-only" ng-show="data.friends.length">
+            <hr>
+            <div class="friend-count hidden">showing {{ data.friendCount }} of {{ data.friendCount }}</div>
+
+            <!--Friend Profile template-->
+            <div class="panel panel-default friend-profile" ng-repeat="friend in data.friends" ng-cloak>
+              <div class="friend-img hidden-md">
+                <img class="img" ng-src="{{ friend.imgURL }}"/>
+              </div>
+              <div class="friend-info">
+                <div class="friend-name">
+                  {{ friend.firstName + " " + friend.lastName }}
+                </div>
+                <div class="friends-friends">
+                  {{ friend.friendsInCommon }} Friends in common
+                </div>
+                <div class="friend-btn-group">
+                  <div class="btn-group">
+                    <button class="btn btn-primary btn-xs">
+                      <span class="glyphicon glyphicon-user"></span>
+                      Profile
+                    </button>
+                    <button class="btn btn-danger btn-xs" ng-click="removeFriend(friend)">
+                      <span class="glyphicon glyphicon-minus"></span>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div><!--End of Example-->
+          </div>
+          <!--End of friends list-->
+          
+          <!--Show pending friend requests-->
+          <div class="pending-friend-requests" ng-show="pendingFriendRequests.length">
+            <hr>
+            
+            <div class="friends-search">
+              <span>Pending friend requests</span>
+            </div>
+
+             <!--Profile example-->
+            <div class="panel panel-default friend-profile" ng-repeat="request in pendingFriendRequests" ng-cloak>
+              <div class="friend-img hidden-md">
+                <img class="img" ng-src="{{ request.imgURL }}"/>
+              </div>
+              <div class="friend-info">
+                <div class="friend-name">
+                  {{ request.firstName + " " + request.lastName }}
+                </div>
+                <div class="friends-friends">
+                  {{ request.friendsInCommon }} Friends in common
+                </div>
+                <div class="friend-btn-group">
+                  <div class="btn-group">
+                    <button class="btn btn-primary btn-xs">
+                      <span class="glyphicon glyphicon-user"></span>
+                      Profile
+                    </button>
+                    <button class="btn btn-info btn-xs" ng-click="approveFriendRequest(request)">
+                      <span class="glyphicon glyphicon-plus"></span>
+                      Request Sent
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--End of Example-->
+
+          </div>
+          <!--End of pending requests-->
+          
+          
+          
+          <!--users search results-->
+          <div class="search-results" ng-show="friendSearchInput.text.length">
+            <hr>
+            
+            <div class="friends-search">
+              <span ng-show=(usersSearchResults.length)>Top search results</span>
+              <span ng-show=(!usersSearchResults.length)>No search results</span>
+            </div>
+
+             <!--Profile example-->
+            <div class="panel panel-default friend-profile" ng-repeat="friend in usersSearchResults" ng-cloak>
+              <div class="friend-img hidden-md">
+                <img class="img" ng-src="{{ friend.imgURL }}"/>
+              </div>
+              <div class="friend-info">
+                <div class="friend-name">
+                  {{ friend.firstName + " " + friend.lastName }}
+                </div>
+                <div class="friends-friends">
+                  {{ friend.friendsInCommon }} Friends in common
+                </div>
+                <div class="friend-btn-group">
+                  <div class="btn-group">
+                    <button class="btn btn-primary btn-xs">
+                      <span class="glyphicon glyphicon-user"></span>
+                      Profile
+                    </button>
+                    <button class="btn btn-primary btn-xs" ng-click="sendFriendRequest(friend)">
+                      <span class="glyphicon glyphicon-plus"></span>
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--End of Example-->
+
+          </div>
+          <!--end of search results-->
+
+          <hr>
+          
+          <!--sidebar footer-->
+          <div class="alert alert-info footer">
+            
+            <h3>Wuddup?!</h3>
+            <p>
+              <i><u>Wuddup?!</u></i> is built as a demonstration of the BMEAN stack.
+              <ul>
+                <li>Bootstrap</li>
+                <li>MongoDB</li>
+                <li>ExpressJS</li>
+                <li>AngularJS</li>
+                <li>NodeJS</li>
+              </ul>
+            
+            </p>
+            
+            <address>
+              <strong>Andrew Sheffield</strong><br>
+                San Jose<br>
+                name@place.com
+            </address>
+            
+          </div>
+          
+          <!--end of sidebar footer-->
+
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--end of friends menu-->
+  
+  <!--Personal bar-->
+  <div id="personal-bar" class="col-md-3 col-md-pull-3 hidden-sm hidden-xs">
+    <div class="panel panel-default" ng-cloak>
+      <div class="profile-pic" ng-click="newProfileImg()">
+        <img id="profile-img" ng-src="{{ data.user.imgURL }}" height="100%"/>
+        <div class="upload-profile-pic-btn">
+          Upload new
+        </div>
+        <input type="file" id="profileImgInput" class="hidden">
+      </div>
+      <div class="users-name">
+        <h4>{{ data.user.firstName + " " + data.user.lastName }}</h3>
+      </div>
+      <div class="users-info">
+        <div class="users-friends">
+          Friends<br>
+          {{ data.friends.length }}
+        </div>
+        <div class="users-status">
+          Status<br>
+          {{ data.status }}
+        </div>
+      </div>
+      <div class="users-buttons">
+        <!--Button group for the lg size-->
+        <div class="btn-group hidden-md hidden-sm hidden-xs" role="group">
+          <button class="btn btn-primary btn-xs">
+            <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+            Profile
+          </button>
+          <button class="btn btn-primary btn-xs" data-toggle="modal" data-target="#settings-modal" ng-click="initTempData()">
+            <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+            Settings
+          </button>
+          <button class="btn btn-primary btn-xs" data-toggle="modal" data-target="#feedback-modal">
+            <span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span>
+            Feedback
+          </button>
+        </div>
+        <!--Button group for the xs-md size-->
+        <div class="btn-group-vertical hidden-lg" role="group">
+          <button class="btn-block btn btn-primary">
+            <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+            Profile
+          </button>
+          <button class="btn-block btn btn-primary" data-toggle="modal" data-target="#settings-modal">
+            <span class="glyphicon glyphicon-cog" aria-hidden="true"></span>
+            Settings
+          </button>
+          <button class="btn-block btn btn-primary" data-toggle="modal" data-target="#feedback-modal">
+            <span class="glyphicon glyphicon-bullhorn" aria-hidden="true"></span>
+            Feedback
+          </button>
+        </div>
+      </div>
+      
+    </div>
+    
+    <div class="alert alert-success" role="alert">Thank you for joining <u><i>Wuddup?!</i></u>  We hope you find <u><i>Wuddup?!</i></u> to be an easy to use, no-nonsense social connection app.  If you have any comments, questions or just general feedback, please click the button above and let us know.</div>
+  
+  </div>
+  <!--end of personal bar-->
+
+  <!--main data stream-->
+  <div id="main-content" class="col-md-6 col-md-pull-3">
+
+    <!--New post row-->
+    <div id="post-row" class="row">
+      <div class="col-md-12">
+        <form>
+          <textarea class="form-control post-textarea" rows="1" style="resize:none" placeholder="Post a comment, share a link, or upload a photo..." ng-keyup="createNewPost($event)" ng-model="newPost.text"></textarea>
+          <a href="#" class="btn-lg picture-btn">
+            <span class="glyphicon glyphicon-camera" aria-hidden="true"></span>
+          </a>
+          <a href="#" class="btn-lg cancel-picture-btn" style="display:none;">
+            <span class="glyphicon glyphicon-remove"></span>
+          </a>
+          <input type="file" id="imginput" style="display:none;"/>
+        </form>
+        
+        <div class="upload-photo well">
+          <div class="panel">
+            <div class="panel-body upload-preview">
+              <div class="img">
+                <button aria-label="Close" class="close" data-dismiss="modal" type="button" ng-click="cancelImgPost()">
+                  <span aria-hidden="true">×</span>
+                </button>
+                <img id="imginputpreview" class="img-responsive" ng-src="" alt="Responsive image">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      
+      
+      
+    </div>
+    <!--post a comment field-->
+
+    <hr>
+
+    <div id="main feed" class="row">
+      <div class="col-md-12">
+        <div id="stream-well" class="">
+          
+          <!--Comment example-->
+          <div class="panel panel-default" ng-repeat="post in stream | orderBy:'timestamp':'reverse' " id="post{{post.id}}" ng-cloak>
+            <div class="panel-body img-panel">
+              <button aria-label="Close" class="close" data-dismiss="modal" type="button" ng-show="post.user.id==data.user.id" ng-click="deletePost(post)">
+                <span aria-hidden="true">×</span>
+              </button>
+              <blockquote>
+                <p class="wordwrap" ng-bind-html="post.textBody"></p>
+                <footer>{{ post.user.firstName + " " + post.user.lastName }} {{ post.timestamp | date : "h:mm a MMM dd',' yyyy" }} </footer>
+              </blockquote>
+              <img ng-src="{{ post.imgURL }}" ng-show="{{ post.imgURL }}" class="img-responsive" alt="Responsive image" data-toggle="modal" data-target="#img-modal" ng-click="openImgModal(post)">
+              <div class="videoWrapper" ng-show="{{ post.youtubeURL }}">
+                <iframe width="560" height="315" ng-src="{{ post.youtubeURL }}" frameborder="0" allowfullscreen></iframe>
+              </div>
+              <div class="post-btn-group">
+                <button id="{{ post.id }}" class="btn-upvote btn-md" ng-click="upvote(post)">
+                  <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
+                  <span class="sweet-text" ng-if="!isUpvoted(post)">Sweet</span>
+                  <span class="sweet-text" ng-if="isUpvoted(post)">Unsweet</span>
+                    <span class="badge sweet-badge">{{ post.sweet.length }}</span>
+                </button>
+                <button class="btn-comment btn-md" ng-click="openComments(post)">
+                  <span class="glyphicon glyphicon-comment" aria-hidden="true"></span>
+                  Comments <span class="badge">{{ post.comments.length }}</span>
+                </button>
+              </div>
+              <div class="panel-footer post-reply comments" style="display: none;">
+                <div class="comment" ng-repeat="comment in post.comments">
+                  <blockquote>
+                    <p class="wordwrap">{{ comment.textBody }}</p>
+                    <footer>{{ comment.user.firstName + " " + comment.user.lastName }}, {{ comment.timestamp | date : "h:mm a MMM dd',' yyyy" }} </footer>
+                  </blockquote>
+                </div>
+                <form>
+                  <textarea class="form-control reply-textarea" rows="1" style="resize:none" placeholder="Post a reply..." ng-model="post.newReply.text" ng-keyup="createNewReply($event, post)"></textarea>
+                </form>
+              </div>
+            </div>
+          </div>
+          <!--repeat post panel-->
+
+        </div>
+      </div>
+    </div>
+    <!--main feed-->
+  </div>
+  <!--end of main content stream-->
+  
+</div>
+
+<!--Image modal-->
+<div class="modal fade" id="img-modal" tabindex="-1" role="dialog" aria-labelledby="im-modal-label">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-body">
+        <div class="img-info">
+          <div class="img-author">{{ modalImg.user.firstName + " " + modalImg.user.lastName }}, <small>{{ modalImg.timestamp | date : "h:mm a MMM dd',' yyyy" }}</small></div>
+          <div class="img-comment"><p>{{ modalImg.textBody }}</p></div>
+        </div>
+        <img class="img img-responsive" ng-src="{{ modalImg.imgURL }}" />
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div>
+<!--End of image model-->
+
+
+<!--Settings Modal-->
+<div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="settings-modal" role="dialog" tabindex="-1" style="display: none;">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Settings</h4>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <label>
+              First Name
+              <input type="text" ng-model="tempData.user.firstName">
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              Last Name
+              <input type="text" ng-model="tempData.user.lastName">
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" ng-model="tempData.settings.receiveEmailsNotifications">&nbsp;Receive email notifications
+            </label>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" ng-model="tempData.settings.recieveEmailNews">&nbsp;Receive emails news and updates
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Change your PASSWORD:</label>
+              <input class="form-control" type="password" placeholder="Change password..." />
+              <input class="form-control" type="password" placeholder="Confirm password..." />
+          </div>
+            <div class="form-group">
+              <label>Update your EMAIL:</label>
+              <input class="form-control" type="text" placeholder="New Email...">
+              <input class="form-control" type="text" placeholder="Confirm Email...">
+          </div>
+        </form>
+    </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal" type="button" ng-click="cancelSettings()">Cancel</button>
+        <button class="btn btn-primary" type="button" data-dismiss="modal" ng-click="setSettings()" >Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--End of settings modal-->
+
+<!--Feedback Modal-->
+<div aria-hidden="true" aria-labelledby="myModalLabel" class="modal fade" id="feedback-modal" role="dialog" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Provide Feedback</h4>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="form-group">
+            <input class="form-control" id="subject" placeholder="Subject" type="text" data-ng-model="feedback.subject">
+          </div>
+          <div class="form-group">
+            <textarea class="form-control" id="body" placeholder="Please provide clear and concise comments to help us improve Wuddup..." rows="3" data-ng-model="feedback.body"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-default" data-dismiss="modal" type="button">Cancel</button>
+        <button class="btn btn-primary" type="button" data-dismiss="modal" data-ng-click="sendFeedback()">Submit Feedback</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!--end of feedback modal-->
+  
+</body>
+    <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+<script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js'></script>
+<script src='http://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js'></script>
+<script src='https://s3-us-west-2.amazonaws.com/s.cdpn.io/64754/autosize.min.js'></script>
+<script src='http://cdnjs.cloudflare.com/ajax/libs/angular.js/1.3.14/angular.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/angular-file-upload/1.1.6/angular-file-upload.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.0-beta.1/angular-sanitize.min.js'></script>
+
+        <script src="javascripts/index.js"></script>
+
+    
+    
+    
   </body>
 </html>
