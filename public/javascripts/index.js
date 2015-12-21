@@ -1,4 +1,8 @@
-var app = angular.module('myApp', ['ngSanitize']);
+var app = angular.module('myApp', ['ngSanitize'], function($interpolateProvider) {
+    $interpolateProvider.startSymbol('[[');
+    $interpolateProvider.endSymbol(']]');
+});
+
 app.config(function($sceDelegateProvider) {
   $sceDelegateProvider.resourceUrlWhitelist([
     'self',
@@ -6,27 +10,69 @@ app.config(function($sceDelegateProvider) {
     'localhost'
   ]);
 });
-app.controller('myCtrl', function($scope) {
+
+app.factory('myFactory', function($http) {
+  var api = {};
+  var baseURL = "/"
+
+  api.getMainStream = function() {
+    var url = baseURL + "posts/main";
+    return $http.get(url);
+  }
+
+  api.getUserInfo = function() {
+    var url = baseURL + "users/me";
+    return $http.get(url);
+  }
+
+  api.searchUsers = function(searchInput) {
+    var url = baseURL + "users/search";
+    return $http.get(url, {params: {searchText: searchInput}});
+  }
+
+  api.postNewPost = function(post) {
+    var url = baseURL + "posts";
+    return $http.post(url, post);
+  }
+
+  api.toggleSweet = function(postid) {
+    var url = baseURL + "posts/sweet";
+    return $http.put(url, {'postid': postid});
+  }
+
+  api.createNewReply = function(post, text) {
+    var newReply = { textBody: post.newReply.text }
+    var url = baseURL + "comments/" + post._id;
+    return $http.post(url, newReply);
+  }
+
+  api.deletePost = function(post) {
+    var url = baseURL + "posts/" + post._id;
+    return $http.delete(url);
+  }
+
+  api.getCommentsForPost = function (post) {
+    var url = baseURL + "comments/" + post._id;
+    return $http.get(url);
+  }
+
+
+
+  return api;
+
+});
+
+app.controller('myCtrl', function($scope, myFactory) {
 
   //Data model for the stream
   $scope.stream = [];
   
   //Data model for the user data
-  $scope.data = {
-    user: {
-      id: 1,
-      firstName: "Patrick",
-      lastName: "Swayze",
-      imgURL: "images/abi.jpg"
-    },
-    friends: [],
-    status: "Broseidon",
-    settings: {
-      receiveEmailsNotifications: true,
-      recieveEmailNews: true
-    }
-  };
-  
+  $scope.user = {};
+
+  //searchable users
+  $scope.usersSearchResults = [];
+
   //Data model for new post
   $scope.newPost = {};
   
@@ -38,27 +84,53 @@ app.controller('myCtrl', function($scope) {
   
   //Holds the data for temporary settings
   $scope.tempData = {};
+
+
+  var init = function() {
+
+    $scope.refreshStream();
+
+    myFactory.getUserInfo()
+      .success(function (res) {
+        $scope.user = res;
+      })
+      .error(function (res) {
+        console.log("Error: getUserInfo()");
+      });
+  };
+
+  $scope.refreshStream = function() {
+    myFactory.getMainStream()
+      .success(function (res) {
+        $scope.stream = res;
+      })
+      .error(function (res) {
+        console.log("Error: getMainStream()");
+      });
+  }
   
-  //searchable users
-  $scope.usersSearchResults = [];
   
-  $scope.pendingFriendRequests = [];
   
   /*************************
   start of angular functions
   *************************/
   
   //Create new post
-  $scope.createNewPost = function(event) {
+  $scope.createNewPostOnEnter = function(event) {
     if (event.which == 13 || event.keyCode == 13) {
-      $('.upload-photo').hide();
+      $scope.createNewPost();
+    }
+  }
+
+  $scope.createNewPost = function() {
+    $('.upload-photo').hide();
       var postText = $scope.formatLinks($scope.newPost.text);
       var newPost = {
         id: $scope.stream.length,
         textBody: postText,
-        user: $scope.data.user,
+        user: $scope.user,
         timestamp: Date.now(),
-        sweet: [],
+        sweets: [],
         comments: []
       }
       
@@ -77,7 +149,13 @@ app.controller('myCtrl', function($scope) {
       var youtubeURL = $scope.getYoutubeURL($scope.newPost.text);
       newPost.youtubeURL = youtubeURL;
       
-      $scope.stream.push(newPost);
+      myFactory.postNewPost(newPost)
+        .success(function (res) {
+          $scope.strean.refresh();
+        })
+        .error(function (res) {
+          console.log("Error: Post new post failed " + res);
+        });
       
       $scope.newPost.text = "";
       var ta = document.querySelector('textarea');
@@ -91,7 +169,6 @@ app.controller('myCtrl', function($scope) {
       $("#imginputpreview").attr('src', "");
       
       return false;
-    }
   }
   
   //format string with URL's
@@ -115,15 +192,17 @@ app.controller('myCtrl', function($scope) {
   //Create new REPLY
   $scope.createNewReply = function(event, post) {
     if (event.which == 13 || event.keyCode == 13) {
-      var newReply = {
-        id: post.comments.length,
-        textBody: post.newReply.text,
-        user: $scope.data.user,
-        timestamp: Date.now()
-      }
-      post.comments.push(newReply);
+
+      myFactory.createNewReply(post, post.newReply.text)
+        .success(function (res) {
+          post.comments = res;
+          console.log(res);
+        })
+        .error(function (err) {
+          console.log("Error: createNewReply() " + err);
+        });
       
-      var ta = $("#post" + post.id + " textarea");
+      var ta = $("#post" + post._id + " textarea");
       ta.val("");
       autosize.update(ta);
       
@@ -171,12 +250,14 @@ app.controller('myCtrl', function($scope) {
   
   //Toggle upvote on post
   $scope.upvote = function(post) {
-    var index = $scope.indexOfSweet(post);
-    if (index < 0) {
-      post.sweet.push($scope.data.user);
-    } else {
-      post.sweet.splice(index, 1);
-    }
+    var postid = post._id;
+    myFactory.toggleSweet(postid)
+      .success(function (res) {
+        post.sweets = res;
+      })
+      .error(function (err) {
+        console.log("Error: toggleSweet() " + err);
+      });
   }
   
   /**
@@ -186,16 +267,16 @@ app.controller('myCtrl', function($scope) {
     else return -1
   */
   $scope.indexOfSweet = function(post) {
-    for (i=0; i < post.sweet.length; i++) {
-      if (post.sweet[i].id == $scope.data.user.id) return i;
+    for (i=0; i < post.sweets.length; i++) {
+      if (post.sweets[i]._id == $scope.user._id) return i;
     }
     return -1;
   }
   
   //Boolean function to check if post is upvoted
   $scope.isUpvoted = function(post) {
-    for (i=0; i < post.sweet.length; i++) {
-      if (post.sweet[i].id == $scope.data.user.id) return true;
+    for (i=0; i < post.sweets.length; i++) {
+      if (post.sweets[i]._id == $scope.user._id) return true;
     }
     return false;
   }
@@ -203,12 +284,12 @@ app.controller('myCtrl', function($scope) {
   //Toggle the comments open for post
   $scope.openComments = function(post) {
     $scope.setAutoResize(post);
-    $("#post" + post.id + " .comments").toggle('ease');
-    $("#post" + post.id + " .comments").find('textarea').focus();
+    $("#post" + post._id + " .comments").toggle('ease');
+    $("#post" + post._id + " .comments").find('textarea').focus();
   }
   
   $scope.setAutoResize = function(post) {
-    var ta = $("#post" + post.id + " textarea");
+    var ta = $("#post" + post._id + " textarea");
     ta.val("");
     autosize(ta);
   }
@@ -219,10 +300,10 @@ app.controller('myCtrl', function($scope) {
   
   //Settings Functions
   $scope.setSettings = function() {
-    $scope.data = angular.copy($scope.tempData);
+    $scope.user = angular.copy($scope.tempData);
   }
   $scope.cancelSettings = function() {
-    $scope.tempData = angular.copy($scope.data);
+    $scope.tempData = angular.copy($scope.user);
   }
   
   //Canceling an Image Post
@@ -230,15 +311,20 @@ app.controller('myCtrl', function($scope) {
     $('.upload-photo').hide();
     $scope.newimg.src = "";
     $("#imginputpreview").attr('src', "");
+    $(".picture-btn").toggle('ease');
+    $(".post-picture-btn").toggle('ease');
   }
   
   //delete a post
   $scope.deletePost = function(post) {
-    for (i = 0; i < $scope.stream.length; i++) {
-      if (post.id == $scope.stream[i].id) {
-        $scope.stream.splice(i, 1);
-      }
-    }
+    myFactory.deletePost(post)
+    .success(function (res) {
+      $scope.refreshStream();
+    })
+    .error(function (err) {
+      console.log("ERROR: deletePost() " + err);
+    });
+
   }
   
   
@@ -247,8 +333,15 @@ app.controller('myCtrl', function($scope) {
   */
   
   //Engage the open file input
+  //Engage the open file input
   $(".picture-btn").on('click', function() {
     $("#imginput").click();
+  });
+
+  $(".post-picture-btn").on('click', function() {
+    $(".picture-btn").toggle();
+    $(".post-picture-btn").toggle();
+    $scope.createNewPost();
   });
   
   function readURL(input) {
@@ -268,6 +361,8 @@ app.controller('myCtrl', function($scope) {
   $("#imginput").change(function(){
     readURL(this);
     $('.post-textarea').focus();
+    $(".picture-btn").toggle();
+    $(".post-picture-btn").toggle();
   });
   
   //Upload new profile picture
@@ -278,7 +373,7 @@ app.controller('myCtrl', function($scope) {
           var reader = new FileReader();
 
           reader.onload = function (e) {
-            $scope.data.user.imgURL = e.target.result;
+            $scope.user.imgURL = e.target.result;
             $("#profile-img").attr('src', e.target.result);
           }
 
@@ -288,45 +383,31 @@ app.controller('myCtrl', function($scope) {
   
   //initialize temp data for settings on open
   $scope.initTempData = function() {
-    $scope.tempData = angular.copy($scope.data);
+    $scope.tempData = angular.copy($scope.user);
   }
   
   //Search for friends
   $scope.searchUsers = function() {
     $scope.usersSearchResults = [];
     
-    var inputText = $scope.friendSearchInput.text.toLowerCase();
-    var inputTextArray = inputText.split(" ");
-    var inputTextFirst = inputTextArray[0];
-    var inputTextSecond = inputTextArray[1];
-    
-    var i;
-    for ( i=0; i < worldUserList.length; i++) {
-      var friend = worldUserList[i];
-      var firstName = friend.firstName.toLowerCase();
-      var lastName = friend.lastName.toLowerCase();
-      var iOfFirst = firstName.indexOf(inputTextFirst);
-      var iOfLast = lastName.indexOf(inputTextFirst);
-      var iOfLastSecond = lastName.indexOf(inputTextSecond);
-      var areFriends = $scope.userIsFriend(worldUserList[i]);
-      if (  
-        (iOfFirst == 0 && !inputTextSecond && !areFriends) //checks first name is no last is present
-        || (iOfLast == 0 && !inputTextSecond && !areFriends) //checks last name against last name
-        || (iOfFirst == 0 && iOfLastSecond == 0 && !areFriends) //checks first and last
-      )
-      {
-        $scope.usersSearchResults.push(worldUserList[i]);
-      }
-    }
+    var searchInput = $scope.friendSearchInput.text;
+
+    myFactory.searchUsers(searchInput)
+      .success(function (res) {
+        $scope.usersSearchResults = res;
+      })
+      .error(function (err) {
+        console.log("Error: searchUsers() " + err);
+      });
   }
   
   $scope.userIsFriend = function(user) {
     var i;
     for ( i=0; i < $scope.pendingFriendRequests.length; i++ ) {
-      if (user.id == $scope.pendingFriendRequests[i].id) return true;
+      if (user._id == $scope.pendingFriendRequests[i]._id) return true;
     }
-    for ( i=0; i < $scope.data.friends.length; i++ ) {
-      if (user.id == $scope.data.friends[i].id) return true;
+    for ( i=0; i < $scope.user.friends.length; i++ ) {
+      if (user._id == $scope.user.friends[i]._id) return true;
     }
     return false;
   }
@@ -340,17 +421,19 @@ app.controller('myCtrl', function($scope) {
   $scope.approveFriendRequest = function(friend) {
     var indexOfFriend = $scope.pendingFriendRequests.indexOf(friend);
     $scope.pendingFriendRequests.splice(indexOfFriend, 1);
-    $scope.data.friends.push(friend);
+    $scope.user.friends.push(friend);
   }
   
   $scope.removeFriend = function(friend) {
     var i;
-    for ( i=0; i < $scope.data.friends.length; i++ ) {
-      if (friend.id == $scope.data.friends[i].id) {
-        $scope.data.friends.splice(i, 1);
+    for ( i=0; i < $scope.user.friends.length; i++ ) {
+      if (friend._id == $scope.user.friends[i]._id) {
+        $scope.user.friends.splice(i, 1);
       }
     }
   }
+
+  init();
   
 });
 
@@ -400,31 +483,3 @@ if (e.keyCode == 13 && !e.shiftKey)
 });
 
 //$('.post-textarea').focus();
-
-
-var worldUserList = [{
-    id: 0,
-    firstName: "Jessica",
-    lastName: "Alba",
-    friendsInCommon: 12,
-    imgURL: ""
-  }, {
-    id: 1,
-    firstName: "Jessica",
-    lastName: "Biel",
-    friendsInCommon: 4,
-    imgURL: ""
-  }, {
-    id: 2,
-    firstName: "Keanu",
-    lastName: "Reeves",
-    friendsInCommon: 7,
-    imgURL: ""
-  }, {
-    id: 3,
-    firstName: "Gary",
-    lastName: "Busey",
-    friendsInCommon: 2,
-    imgURL: ""
-  },
-];

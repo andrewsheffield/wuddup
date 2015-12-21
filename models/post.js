@@ -7,7 +7,7 @@ var postSchema = new Schema({
 	textBody: String,
 	owner: {
 		type: Schema.Types.ObjectId,
-		ref: 'user'
+		ref: 'users'
 	},
 	creationTimestamp: {
 		type: Date,
@@ -17,11 +17,11 @@ var postSchema = new Schema({
 	youtubeURL: String,
 	sweets: [{
 		type: Schema.Types.ObjectId,
-		ref: 'user'
+		ref: 'users'
 	}],
 	comments: [{
 		type: Schema.Types.ObjectId,
-		ref: 'comment'
+		ref: 'comments'
 	}]
 });
 var Post = mongoose.model('posts', postSchema);

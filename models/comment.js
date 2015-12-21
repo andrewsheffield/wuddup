@@ -11,7 +11,7 @@ var commentSchema = new Schema({
 	},
 	owner: {
 		type: Schema.Types.ObjectId,
-		ref: 'user'
+		ref: 'users'
 	}
 });
 var Comment = mongoose.model('comments', commentSchema);

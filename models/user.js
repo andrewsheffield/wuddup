@@ -7,7 +7,7 @@ var userSchema = new Schema ({
 	firstName: String,
 	lastName: String,
 	email: String,
-	imgURL: String,
+	imgURL: {type: String, default: "/images/abi.jpg"},
 	hashedPassword: String,
 	location: {
 		type: Number,
